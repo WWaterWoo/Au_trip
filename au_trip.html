@@ -632,14 +632,24 @@ function xhsKeyword(loc) {
   if(loc.xhsKeyword) return loc.xhsKeyword.trim();
   return (loc.name||'').replace(/⭐.*$/g,'').replace(/（.*?）/g,'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim();
 }
-function xhsWebUrl(loc) { return `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(xhsKeyword(loc))}&source=web_explore_feed`; }
-
 window._extLocs = {};
 DAYS.forEach(d => d.locations.forEach(l => { window._extLocs[`${d.id}::${l.name}`] = l; }));
 
 function openXhs(key) {
   const loc = window._extLocs[key]; if(!loc) return false;
-  window.open(xhsWebUrl(loc), '_blank');
+  const kw = xhsKeyword(loc);
+  const appUrl = `xhsdiscover://search/result?keyword=${encodeURIComponent(kw)}&source=deeplink`;
+  // Try to open XHS app; if fails after timeout, show copy prompt
+  const start = Date.now();
+  window.location.href = appUrl;
+  setTimeout(() => {
+    if (Date.now() - start < 2500) {
+      // App didn't open, prompt to copy keyword
+      if(confirm(`📕 请在小红书App中搜索：\n\n「${kw}」\n\n点击确定复制关键词`)) {
+        navigator.clipboard.writeText(kw).catch(()=>{});
+      }
+    }
+  }, 1500);
   return false;
 }
 
@@ -651,7 +661,7 @@ function locCard(loc, dayIdx) {
   const gmapQ = loc.gmap||encodeURIComponent(loc.name);
   let lnk = `<button class="btn nav" onclick="openAS('${loc.name.replace(/'/g,"\\'")}',${loc.lat},${loc.lng},'${gmapQ}')">📍 导航</button>`;
   if(loc.xhsKeyword) {
-    lnk += `<a href="${xhsWebUrl(loc)}" target="_blank" onclick="event.preventDefault();return openXhs('${locKey.replace(/'/g,"\\'")}')" class="btn xhs">📕 小红书</a>`;
+    lnk += `<a href="javascript:void(0)" onclick="event.preventDefault();event.stopPropagation();return openXhs('${locKey.replace(/'/g,"\\'")}')" class="btn xhs">📕 小红书</a>`;
   }
   if(loc.reserve) lnk += `<a href="${loc.reserve}" target="_blank" class="btn rsv">📅 预约</a>`;
   return `<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=='—'?loc.time:'备选'}</div><div class="name">${bdg} ${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?'<div class="budget">'+loc.budget+'</div>':''}${payChips(loc.pay)}<div class="links">${lnk}</div>${loc.detail?'<div class="details" id="'+uid+'">'+loc.detail.replace(/\n/g,'<br>')+'</div>':''}</div></div>`;
