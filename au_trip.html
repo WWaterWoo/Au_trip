@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🇦🇺 澳洲之旅 · 墨尔本+悉尼 9日</title>
+<meta name="description" content="2025年5月 澳洲墨尔本悉尼自由行行程地图">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f5f5f7;
+  --bg-tertiary:   #fbfbfd;
+  --bg-grouped:    #f2f2f7;
+  --bg-elevated:   #ffffff;
+  --text-primary:   #1d1d1f;
+  --text-secondary: #86868b;
+  --text-tertiary:  #aeaeb2;
+  --accent:        #0071e3;
+  --accent-hover:  #0077ed;
+  --tint-red:    #ff3b30;
+  --tint-orange: #ff9500;
+  --tint-green:  #34c759;
+  --tint-blue:   #007aff;
+  --tint-purple: #af52de;
+  --tint-pink:   #ff2d55;
+  --separator:  rgba(60, 60, 67, .12);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:  0 4px 14px rgba(0,0,0,.08);
+  --shadow-lg:  0 8px 30px rgba(0,0,0,.12);
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+               "Helvetica Neue", "Arial", sans-serif;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+#map { width: 100%; height: 40vh; min-height: 280px; position: sticky; top: 0; z-index: 100; }
+.locate-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(255,255,255,.92); backdrop-filter: blur(8px);
+  border: none; box-shadow: 0 1px 4px rgba(0,0,0,.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.locate-btn.active { color: #007aff; }
+@keyframes loc-pulse {
+  0%   { transform: scale(1); opacity: .55; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+.loc-pulse {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: rgba(0,122,255,.25);
+  animation: loc-pulse 1.6s ease-out infinite;
+}
+
+.tabs {
+  display: flex; gap: 6px; padding: 12px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: rgba(255,255,255,.85); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px); position: sticky; top: 40vh; z-index: 99;
+  border-bottom: .5px solid var(--separator); scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0; padding: 7px 16px; border-radius: 980px; border: none;
+  background: var(--bg-grouped); color: var(--text-secondary);
+  font-size: 14px; font-weight: 500; cursor: pointer; transition: all .25s ease;
+  white-space: nowrap; letter-spacing: -0.01em;
+}
+.tab:active { transform: scale(.96); }
+.tab.active { background: var(--accent); color: #fff; }
+
+.content { max-width: 680px; margin: 0 auto; padding: 16px 16px calc(24px + var(--safe-bottom)); }
+
+.hero { text-align: center; padding: 28px 20px 20px; }
+.hero h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; }
+.hero .subtitle { font-size: 17px; color: var(--text-secondary); margin-top: 6px; font-weight: 400; }
+
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.info-card { background: var(--bg-elevated); border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm); }
+.info-card .label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .02em; margin-bottom: 6px; }
+.info-card .value { font-size: 15px; font-weight: 600; line-height: 1.4; }
+
+.section-head { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .03em; padding: 20px 0 8px; }
+
+.day-head { padding: 20px 0 12px; }
+.day-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+.day-head p { font-size: 15px; color: var(--text-secondary); margin-top: 2px; }
+
+.route-bar { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 14px; box-shadow: var(--shadow-sm); font-size: 13px; color: var(--text-secondary); line-height: 1.7; white-space: pre-line; }
+.route-bar strong { color: var(--text-primary); }
+
+.timeline { position: relative; padding-left: 24px; }
+.timeline::before { content: ''; position: absolute; left: 7px; top: 20px; bottom: 20px; width: 1.5px; background: var(--separator); }
+.tl-item { position: relative; margin-bottom: 10px; }
+.tl-dot { position: absolute; left: -20px; top: 18px; width: 10px; height: 10px; border-radius: 50%; z-index: 1; box-shadow: 0 0 0 3px var(--bg-secondary); }
+.tl-dot.food    { background: var(--tint-red); }
+.tl-dot.spot    { background: var(--tint-blue); }
+.tl-dot.hotel   { background: var(--tint-orange); }
+.tl-dot.drink   { background: var(--tint-purple); }
+.tl-dot.transport { background: var(--text-tertiary); }
+
+.card { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); transition: box-shadow .25s ease; cursor: pointer; }
+.card:active { box-shadow: var(--shadow-md); }
+.card .time { font-size: 12px; font-weight: 600; color: var(--text-tertiary); letter-spacing: .01em; }
+.card .name { font-size: 17px; font-weight: 600; margin: 2px 0 4px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 6px; }
+.card .desc { font-size: 14px; color: var(--text-secondary); line-height: 1.45; }
+
+.badge { display: inline-flex; align-items: center; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 4px; }
+.badge.food   { background: rgba(255,59,48,.1);  color: var(--tint-red); }
+.badge.spot   { background: rgba(0,122,255,.1);  color: var(--tint-blue); }
+.badge.drink  { background: rgba(175,82,222,.1); color: var(--tint-purple); }
+
+.budget { display: inline-block; margin-top: 6px; padding: 3px 10px; background: var(--bg-grouped); border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+.pays { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.pay { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 600; }
+.pay.ok  { background: rgba(52,199,89,.1);  color: var(--tint-green); }
+.pay.no  { background: rgba(255,59,48,.08); color: var(--tint-red); }
+.pay.idk { background: rgba(255,149,0,.1);  color: var(--tint-orange); }
+
+.links { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+  text-decoration: none !important; transition: filter .2s;
+}
+.btn:active { filter: brightness(.9); }
+.btn.nav    { background: var(--accent); color: #fff; }
+.btn.xhs    { background: #ff2442; color: #fff; }
+.btn.dp     { background: #ffa700; color: #fff; }
+.btn.rsv    { background: var(--tint-green); color: #fff; }
+
+.as-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.35); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.as-overlay.show { opacity: 1; pointer-events: auto; }
+.as-sheet {
+  width: 100%; max-width: 420px;
+  padding: 0 8px 34px;
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.as-overlay.show .as-sheet { transform: translateY(0); }
+.as-group {
+  background: rgba(255,255,255,.88); backdrop-filter: blur(20px);
+  border-radius: 14px; overflow: hidden; margin-bottom: 8px;
+}
+.as-group .as-item {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px; font-size: 18px; color: #007aff; font-weight: 500;
+  border: none; background: none; width: 100%; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.as-group .as-item + .as-item { border-top: .5px solid rgba(0,0,0,.12); }
+.as-group .as-item:active { background: rgba(0,0,0,.06); }
+.as-cancel { font-weight: 600; }
+
+.details {
+  margin-top: 10px; padding-top: 10px;
+  border-top: .5px solid var(--separator);
+  font-size: 13px; color: var(--text-secondary); line-height: 1.6;
+}
+.details.closed { display: none; }
+
+.day-list .card { margin-bottom: 8px; }
+.day-list .card .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+.pay-summary { background: var(--bg-elevated); border-radius: var(--radius-md); padding: 14px 16px; box-shadow: var(--shadow-sm); font-size: 13px; line-height: 1.7; margin-bottom: 10px; }
+.pay-summary h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.pay-summary .warn { color: var(--tint-red); }
+.pay-summary .ok-text { color: var(--tint-green); }
+
+.legend { display: flex; gap: 14px; flex-wrap: wrap; padding: 8px 0; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.leaflet-popup-content-wrapper { border-radius: var(--radius-md) !important; box-shadow: var(--shadow-lg) !important; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important; }
+.leaflet-popup-content { font-size: 14px !important; line-height: 1.5 !important; margin: 12px 14px !important; }
+.leaflet-popup-content a { color: var(--accent) !important; }
+.leaflet-popup-tip { background: #fff !important; }
+.leaflet-control-zoom a { width: 34px !important; height: 34px !important; line-height: 34px !important; font-size: 16px !important; border-radius: 10px !important; background: rgba(255,255,255,.85) !important; -webkit-backdrop-filter: blur(10px) !important; backdrop-filter: blur(10px) !important; border: .5px solid var(--separator) !important; color: var(--text-primary) !important; }
+.leaflet-control-zoom { border-radius: 12px !important; overflow: hidden; box-shadow: var(--shadow-md) !important; border: none !important; }
+.leaflet-control-attribution { font-size: 9px !important; opacity: .5; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="tabs" id="tabs"></div>
+<div class="content" id="content"></div>
+
+<script>
+const HOTEL = { name: '墨尔本 威廉姆街盛橡套房酒店', lat: -37.8136, lng: 144.9563 };
+const HOTEL2 = { name: '悉尼 lyf邦迪枢纽共享公寓', lat: -33.8917, lng: 151.2474 };
+
+const DAYS = [
+  { id: 0, label: '总览', color: '#0071e3', locations: [] },
+
+  // ═══════════════ D1: 抵达墨尔本 ═══════════════
+  {
+    id: 1, label: 'D1', date: '5月23日 周五', title: '抵达墨尔本', color: '#ff9500',
+    locations: [
+      { name: '墨尔本国际机场', lat: -37.6690, lng: 144.8410, type: 'transport', time: '20:20', desc: '航班抵达MEL国际航站楼',
+        detail: '🚕 机场→酒店交通方案：\n• SkyBus：$20 AUD/人，到Southern Cross Station，再步行10min到酒店\n• 4人打Uber/出租车：约$65-80 AUD总价（推荐✅ 人均更便宜）\n• 预约接机：可在Klook/飞猪预订中文接机\n\n到达后取行李+出关约40分钟',
+        gmap: 'Melbourne+Airport+MEL' },
+      { name: '威廉姆街盛橡套房酒店', lat: -37.8136, lng: 144.9563, type: 'hotel', time: '21:30', desc: '350 William Street，办理入住',
+        detail: '套房式酒店有厨房，可以自己做早餐\n附近超市：Woolworths（步行5min在Spencer St）\n建议买些早餐食材和水',
+        gmap: 'Oaks+on+William+350+William+Street+Melbourne' }
+    ]
+  },
+
+  // ═══════════════ D2: 墨尔本市区（含详细交通） ═══════════════
+  {
+    id: 2, label: 'D2', date: '5月24日 周六', title: '墨尔本市区探索', color: '#34c759',
+    locations: [
+      { name: 'Flinders Street Station', lat: -37.8183, lng: 144.9671, type: 'spot', time: '09:30', desc: '标志性黄色钟楼火车站，墨尔本地标',
+        detail: '🚃 交通：从酒店出发\n• 步行：沿William St向南走约15分钟即到\n• 免费电车：酒店门口坐任意南向Tram（如Route 58/11），2站到Flinders St\n💡 墨尔本CBD有Free Tram Zone（免费电车区），市中心范围内坐电车不用刷卡！\n\n⏱ 拍照打卡约20分钟',
+        xhsKeyword: '墨尔本弗林德斯火车站', gmap: 'Flinders+Street+Station+Melbourne' },
+      { name: 'Hosier Lane 涂鸦巷', lat: -37.8165, lng: 144.9690, type: 'spot', time: '10:00', desc: '世界著名街头艺术巷',
+        detail: '🚶 交通：从Flinders Station步行3分钟\n就在Flinders St和Swanston St交叉口东边\n拍照约15-20分钟',
+        xhsKeyword: '墨尔本涂鸦巷Hosier Lane', gmap: 'Hosier+Lane+Melbourne' },
+      { name: 'Federation Square', lat: -37.8180, lng: 144.9691, type: 'spot', time: '10:30', desc: '联邦广场，现代建筑群+周末活动',
+        detail: '🚶 交通：涂鸦巷旁边，步行1分钟\n广场内有ACMI影像博物馆（免费）和游客中心\n可以在这里拿一张免费城市地图',
+        gmap: 'Federation+Square+Melbourne' },
+      { name: 'Queen Victoria Market', lat: -37.8076, lng: 144.9568, type: 'food', time: '11:30', desc: '维多利亚女王市场 — 周六开放！本地美食天堂', budget: '人均15-25 AUD',
+        detail: '🚃 交通：Federation Square → QVM\n• 免费Tram Route 58（沿William St北行）直达！\n• 或步行约15分钟沿Elizabeth St北走\n• 在「Queen Victoria Market/Therry St」站下车\n\n⏰ 周六 6am-3pm 开放\n🍴 必吃：Bratwurst烤肠摊、South American Empanadas、Borek土耳其卷饼\n购物：水果、果酱、UGG、羊毛制品\n⚠️ 周日周一休息',
+        xhsKeyword: '墨尔本维多利亚市场必吃', gmap: 'Queen+Victoria+Market+Melbourne' },
+      { name: 'Royal Exhibition Building', lat: -37.8047, lng: 144.9717, type: 'spot', time: '13:30', desc: '世界遗产皇家展览馆 + Carlton Gardens',
+        detail: '🚃 交通：QVM → Royal Exhibition Building\n• 步行约12分钟（沿Victoria St东走）\n• 或坐免费Tram Route 30/35 在Nicholson St下\n\n卡尔顿花园很适合散步拍照\n展馆本身不是每天开放参观内部',
+        gmap: 'Royal+Exhibition+Building+Melbourne' },
+      { name: 'Melbourne Museum', lat: -37.8033, lng: 144.9717, type: 'spot', time: '14:00', desc: '免费入场！澳洲自然历史+原住民文化',
+        detail: '🚶 交通：就在Royal Exhibition Building隔壁\n\n开放至17:00，免费入场\n重点推荐：\n• Bunjilaka Aboriginal Cultural Centre\n• 恐龙化石展厅\n• 森林生态展区\n预计逛1.5-2小时',
+        gmap: 'Melbourne+Museum' },
+      { name: 'Naked for Satan', lat: -37.7947, lng: 144.9780, type: 'drink', time: '17:30', desc: 'Brunswick St网红酒吧 — 天台看日落+Tapas', budget: '人均20-35 AUD',
+        detail: '🚃 交通：Melbourne Museum → Naked for Satan\n• 方案1：步行约15分钟（沿Nicholson St走到Brunswick St）\n• 方案2：Tram Route 11 从Collins/Victoria到Brunswick St（⚠️已出Free Zone，需刷Myki）\n\n💡 Myki卡：在7-11买，充值$10-20够用\n单程Zone 1+2 约$5 AUD\n\n🍸 推荐：楼顶天台！日落看墨尔本skyline\n不接受预约，17:00前去不用排队\nTapas小吃+鸡尾酒约$20-35/人',
+        xhsKeyword: '墨尔本Naked for Satan', gmap: 'Naked+for+Satan+Brunswick+Street+Fitzroy' },
+      { name: 'Masti 北印度餐厅', lat: -37.7957, lng: 144.9778, type: 'food', time: '19:00', desc: 'Brunswick St高评分改良印度菜', budget: '人均25-40 AUD',
+        detail: '🚶 交通：从Naked for Satan步行2分钟\n\n招牌：蜂蜜辣花菜、奶油咖喱鸡\n素食选择多\n建议提前OpenTable预约',
+        xhsKeyword: '墨尔本Brunswick Street餐厅', gmap: 'Masti+Indian+Brunswick+Street+Fitzroy+Melbourne' },
+      { name: '返回酒店', lat: -37.8136, lng: 144.9563, type: 'transport', time: '20:30', desc: '晚餐后返回酒店休息',
+        detail: '🚃 回程交通：\n• Tram Route 11 从Brunswick St到CBD（约15分钟）\n• 或Uber约$12-15\n• 记得Myki Touch off！' }
+    ]
+  },
+
+  // ═══════════════ D3: 大洋路包车反线 ═══════════════
+  {
+    id: 3, label: 'D3', date: '5月25日 周日', title: '大洋路包车反线 🚗', color: '#007aff',
+    locations: [
+      { name: '酒店出发（内陆高速直奔十二门徒）', lat: -37.8136, lng: 144.9563, type: 'transport', time: '07:00', desc: '包车反线！先走内陆高速直达十二门徒（约3.5h）',
+        detail: '📌 反线优势：\n• 早上到十二门徒人少！正线团都是下午才到\n• 拍照不用等位，光线好\n• 回程沿大洋路海岸线走，风景在右手边更方便看\n\n🚗 包车费用：4人约500-850 AUD/天\n人均125-210 AUD，含中文司导+上门接送\n📱 平台推荐：Klook / DingTaxi叮叮包车 / 飞猪\n\n⏰ 建议7:00出发，避开周日出城车流',
+        gmap: 'Oaks+on+William+Melbourne' },
+      { name: 'Twelve Apostles 十二门徒岩', lat: -38.6653, lng: 143.1047, type: 'spot', time: '10:30', desc: '大洋路精华！上午人少光线好，尽情拍照',
+        detail: '反线最大好处：10:30到这里几乎没有旅行团！\n正线团一般13:00-15:00才到\n\n停留约45-60分钟\n步道平坦，多个观景平台\n上午阳光从东面照来，拍照没有逆光',
+        xhsKeyword: '大洋路十二门徒', gmap: 'Twelve+Apostles+Victoria' },
+      { name: 'Loch Ard Gorge 洛克阿德峡谷', lat: -38.6622, lng: 143.1072, type: 'spot', time: '11:15', desc: '十二门徒旁5分钟，峡谷+海滩超壮观',
+        detail: '有多条步道可以走下去沙滩\n峡谷内浪很大很壮观\n约30分钟',
+        gmap: 'Loch+Ard+Gorge' },
+      { name: 'Port Campbell 午餐', lat: -38.6183, lng: 142.9950, type: 'food', time: '12:00', desc: '小镇午餐，推荐12 Rocks Cafe', budget: '人均20-30 AUD',
+        detail: '🍴 推荐：\n• 12 Rocks Cafe — 当地人气最高\n• Port Campbell Takeaway — fish & chips\n小镇安静，午餐不赶时间',
+        xhsKeyword: '大洋路Port Campbell午餐', gmap: '12+Rocks+Cafe+Port+Campbell' },
+      { name: 'Apollo Bay 阿波罗湾', lat: -38.7580, lng: 143.6717, type: 'spot', time: '14:00', desc: '沿海岸线东行，经过最美路段到阿波罗湾',
+        detail: '从Port Campbell到Apollo Bay约1小时\n沿途海岸线公路是大洋路精华段\n到了可以下车海边走走、喝杯咖啡',
+        gmap: 'Apollo+Bay+Victoria' },
+      { name: 'Kennet River 考拉路', lat: -38.6680, lng: 143.8310, type: 'spot', time: '15:00', desc: '路边桉树林看野生考拉！免费',
+        detail: '📍 就在Great Ocean Road路边\nKennet River小镇附近的桉树上经常有考拉\n抬头看树杈！一般能看到2-5只\n停留约15-20分钟',
+        xhsKeyword: '大洋路看野生考拉Kennet River', gmap: 'Kennet+River+Koalas+Great+Ocean+Road' },
+      { name: 'Lorne 小镇', lat: -38.5424, lng: 143.9789, type: 'food', time: '15:45', desc: '海边小镇休息，喝杯咖啡或冰淇淋',
+        detail: '大洋路最热闹的海边小镇\n推荐 Lorne Beach Pavilion 喝个下午茶\n或者海边散步看日落（17:20左右）',
+        xhsKeyword: '大洋路Lorne', gmap: 'Lorne+Victoria+Australia' },
+      { name: 'Memorial Arch 纪念拱门', lat: -38.3465, lng: 144.3208, type: 'spot', time: '16:30', desc: '大洋路起点标志牌，打卡留念',
+        detail: '经典打卡照：站在拱门下和Great Ocean Road牌子合影\n停留5-10分钟',
+        gmap: 'Great+Ocean+Road+Memorial+Arch' },
+      { name: '返回墨尔本', lat: -37.8136, lng: 144.9563, type: 'transport', time: '18:30', desc: '从Torquay走高速返回市区约1.5小时',
+        detail: '反线回程优势：从Torquay回墨尔本只要1.5小时！\n（正线从十二门徒回去要3-4小时）\n约20:00到酒店\n晚餐推荐酒店附近Docklands区域' }
+    ]
+  },
+
+  // ═══════════════ D4: 小团一日游 ═══════════════
+  {
+    id: 4, label: 'D4', date: '5月26日 周一', title: '蒸汽火车+企鹅归巢（小团）🐧', color: '#af52de',
+    locations: [
+      { name: '酒店等待接驳', lat: -37.8136, lng: 144.9563, type: 'transport', time: '07:30', desc: '中文小团上门接送，等待司导到来',
+        detail: '📌 已报小团！一般含：\n• 酒店接送\n• Puffing Billy蒸汽火车\n• 企鹅归巢\n• 中文导游讲解\n\n⏰ 通常7:00-8:00接人（具体看确认邮件）\n带好：厚外套、围巾（企鹅归巢超冷）、充电宝' },
+      { name: 'Puffing Billy 蒸汽火车', lat: -37.9108, lng: 145.3543, type: 'spot', time: '09:30', desc: '百年蒸汽火车穿越丹德农雨林',
+        detail: '🚂 体验Tips：\n• 可以把脚挂出窗外拍照（标志性姿势）\n• 穿越桉树雨林+木栈桥\n• Belgrave→Lakeside 往返约2小时\n• 小团一般已含火车票\n\n📸 最佳拍照：过木桥时+弯道时',
+        xhsKeyword: '墨尔本蒸汽火车Puffing Billy', gmap: 'Puffing+Billy+Railway+Belgrave' },
+      { name: '午餐（团餐或自理）', lat: -37.9350, lng: 145.3490, type: 'food', time: '12:00', desc: '通常在Lakeside附近用餐',
+        budget: '含在团费 或 自理约15-25 AUD',
+        detail: '具体看你报的团是否含餐\n不含的话Lakeside有小咖啡馆' },
+      { name: 'Phillip Island 菲利普岛', lat: -38.4870, lng: 145.2320, type: 'spot', time: '15:00', desc: '抵达企鹅岛，游览Churchill Island/考拉中心',
+        detail: '小团一般包含以下2-3个：\n• Churchill Island 丘吉尔岛农场\n• Koala Conservation Centre 考拉中心\n• The Nobbies 海豹岩观景\n\n在考拉中心可以近距离看树上的考拉',
+        xhsKeyword: '菲利普岛考拉中心', gmap: 'Phillip+Island+Nature+Parks' },
+      { name: 'Penguin Parade 企鹅归巢', lat: -38.5070, lng: 145.1270, type: 'spot', time: '17:30', desc: '日落时分小企鹅成群上岸归巢，超治愈！',
+        detail: '🐧 观赏Tips：\n• 5月日落约17:20，企鹅17:00开始陆续上岸\n• ⚠️ 严禁拍照！手机也不行\n• 🧥 海边超级冷！必须穿厚外套+围巾+帽子\n• 建议带暖宝宝\n• 看完约1-1.5小时\n• 小团票一般是普通看台',
+        xhsKeyword: '企鹅归巢体验攻略', gmap: 'Penguin+Parade+Phillip+Island' },
+      { name: '返回墨尔本', lat: -37.8136, lng: 144.9563, type: 'transport', time: '19:30', desc: '小团送回酒店，约1.5-2小时车程',
+        detail: '一般21:00-21:30回到酒店\n路上可以车上休息\n到酒店后附近吃碗面或泡面解决' }
+    ]
+  },
+
+  // ═══════════════ D5: 墨尔本→悉尼 ═══════════════
+  {
+    id: 5, label: 'D5', date: '5月27日 周二', title: '墨尔本→悉尼 ✈️', color: '#ff9500',
+    locations: [
+      { name: '酒店周边散步', lat: -37.8136, lng: 144.9563, type: 'spot', time: '09:00', desc: 'Southbank河畔散步+最后逛逛墨尔本',
+        detail: '🚶 步行10分钟到Yarra River南岸\n可以拍到城市天际线\n或去DFO South Wharf购物（打折村）\n\n📸 Southbank Promenade的城市倒影很出片',
+        gmap: 'Southbank+Promenade+Melbourne' },
+      { name: 'Hardware Lane 早午餐', lat: -37.8130, lng: 144.9610, type: 'food', time: '10:30', desc: '欧式露天巷弄餐厅街brunch', budget: '人均20-30 AUD',
+        detail: '🚶 交通：酒店步行8分钟\n沿着Little Bourke St往东走\n\n露天小巷两边都是餐厅\n推荐随便挑一家坐下喝咖啡+brunch',
+        xhsKeyword: '墨尔本Hardware Lane brunch', gmap: 'Hardware+Lane+Melbourne' },
+      { name: '墨尔本机场 MEL', lat: -37.6690, lng: 144.8410, type: 'transport', time: '12:30', desc: '提前2小时到机场',
+        detail: '🚌 交通：酒店→机场\n• SkyBus：从Southern Cross Station出发（步行10min到），$20/人，约30分钟到机场\n• 4人打车：约$60-70，更方便（推荐✅）\n\n14:25起飞，国内航班安检快\n⏰ 建议12:00出门',
+        gmap: 'Melbourne+Airport+Terminal+1' },
+      { name: '抵达悉尼 SYD', lat: -33.9461, lng: 151.1772, type: 'transport', time: '15:50', desc: '抵达悉尼金斯福德·史密斯机场',
+        detail: '国内航班到T2/T3航站楼\n取行李约15分钟', gmap: 'Sydney+Domestic+Airport' },
+      { name: 'lyf邦迪枢纽共享公寓', lat: -33.8917, lng: 151.2474, type: 'hotel', time: '17:00', desc: '5-11 Hollywood Avenue, Bondi Junction',
+        detail: '🚆 机场→酒店交通：\n• 方案1（推荐✅）：机场火车Airport Link → Central换乘T4线 → Bondi Junction站（约40分钟，$18/人含机场附加费）\n• 方案2：打车/Uber约$50-60总价\n\n💡 Opal卡：到机场火车站就能买（或直接用Visa/Apple Pay刷卡进站）\n\nBondi Junction站出来步行5分钟到酒店',
+        gmap: 'lyf+Bondi+Junction+Sydney' },
+      { name: 'Darling Harbour 达令港', lat: -33.8724, lng: 151.2002, type: 'spot', time: '18:30', desc: '傍晚到达令港散步看夜景',
+        detail: '🚆 交通：Bondi Junction → Darling Harbour\n• 火车T4线：Bondi Junction → Town Hall站（约12分钟，$3.6）\n• 从Town Hall步行10分钟到达令港\n\n码头灯光+城市倒影超美\n绕港口走一圈约30分钟',
+        xhsKeyword: '悉尼达令港夜景', gmap: 'Darling+Harbour+Sydney' },
+      { name: '达令港晚餐', lat: -33.8710, lng: 151.1990, type: 'food', time: '19:30', desc: '达令港沿岸选择丰富', budget: '人均25-40 AUD',
+        detail: '🍴 推荐：\n• Hurricane\'s Grill — 澳洲牛排（人均40 AUD）\n• Nick\'s Seafood — 海鲜拼盘看海\n• Cockle Bay Wharf 区域随便逛\n\n🚆 回程：Town Hall → Bondi Junction（火车12分钟）',
+        xhsKeyword: '悉尼达令港餐厅推荐', gmap: 'Darling+Harbour+restaurants+Sydney' }
+    ]
+  },
+
+  // ═══════════════ D6: 悉尼地标+Taronga动物园 ═══════════════
+  {
+    id: 6, label: 'D6', date: '5月28日 周三', title: 'Taronga动物园+悉尼港', color: '#007aff',
+    locations: [
+      { name: 'Circular Quay 环形码头', lat: -33.8610, lng: 151.2110, type: 'transport', time: '08:30', desc: '从酒店前往环形码头，准备坐渡轮',
+        detail: '🚆 交通：Bondi Junction → Circular Quay\n• T4火车：Bondi Junction → Martin Place（约8分钟）\n• 再步行8分钟到Circular Quay\n• 或直接坐到Town Hall转T2到Circular Quay\n\n💡 也可以T4到Edgecliff → 转T2/T8到Circular Quay\n总时间约20-25分钟',
+        gmap: 'Circular+Quay+Sydney' },
+      { name: 'Taronga Zoo 塔龙加动物园', lat: -33.8434, lng: 151.2411, type: 'spot', time: '09:15', desc: '坐渡轮12分钟到动物园！海港风光+动物近距离',
+        budget: '门票约51 AUD/人（含缆车）',
+        detail: '⛴️ 交通：Circular Quay → Taronga Zoo\n• F2渡轮：Wharf 2出发，约12分钟\n• 刷Opal卡上船，和坐公交一样方便\n• 渡轮上可以拍歌剧院+海港大桥！\n\n🐨 动物园Tips：\n• 到达码头后坐Sky Safari缆车上山（含在门票）\n• 从山顶往下逛最省力\n• 考拉区可以近距离合影（需额外预约$30）\n• 袋鼠、塔斯马尼亚恶魔、鸭嘴兽都有\n• 有海港大桥做背景的长颈鹿超出片！\n\n⏱ 预计逛3-4小时',
+        reserve: 'https://taronga.org.au/', xhsKeyword: '悉尼Taronga动物园攻略', gmap: 'Taronga+Zoo+Sydney' },
+      { name: '动物园内午餐', lat: -33.8440, lng: 151.2400, type: 'food', time: '12:30', desc: '园内多个餐厅和咖啡厅', budget: '人均15-25 AUD',
+        detail: '推荐：\n• The View Restaurant — 看海港景色\n• 或带三明治野餐（入口有便利店）',
+        gmap: 'Taronga+Zoo+food+court' },
+      { name: '渡轮返回Circular Quay', lat: -33.8610, lng: 151.2110, type: 'transport', time: '14:00', desc: '坐F2渡轮返回环形码头（12分钟）',
+        detail: '⛴️ 同样在Taronga Zoo Wharf坐F2回\n回来后直接走到歌剧院' },
+      { name: 'Sydney Opera House 歌剧院', lat: -33.8568, lng: 151.2153, type: 'spot', time: '14:30', desc: '世界文化遗产，各角度拍照打卡',
+        detail: '🚶 交通：Circular Quay步行5分钟\n\n外观免费参观\n推荐拍照角度：\n• 正面台阶（经典）\n• 从Botanic Gardens方向拍侧面\n• 远一点在Opera Bar拍全景\n\n内部导览约$43/人（1小时，可选中文）',
+        xhsKeyword: '悉尼歌剧院拍照角度', gmap: 'Sydney+Opera+House' },
+      { name: 'The Rocks 岩石区', lat: -33.8590, lng: 151.2080, type: 'spot', time: '15:30', desc: '悉尼最古老街区，文艺小店+咖啡',
+        detail: '🚶 交通：从歌剧院步行10分钟\n\n殖民时期建筑+文艺小店\n周三没有周末集市，但小店照常\n逛30-40分钟',
+        xhsKeyword: '悉尼岩石区The Rocks', gmap: 'The+Rocks+Sydney' },
+      { name: 'Sydney Harbour Bridge 步行过桥', lat: -33.8523, lng: 151.2108, type: 'spot', time: '16:00', desc: '步行过桥免费！桥上拍歌剧院视角绝绝子',
+        detail: '🚶 交通：从The Rocks步行5分钟到桥东入口\n\n步行单程约20分钟\n东侧人行道可以拍到歌剧院\n走到北面Milsons Point后可以坐火车回来\n\n🚆 回程：Milsons Point站 → T1线 → Wynyard/Town Hall → 换T4 → Bondi Junction（约25分钟）',
+        xhsKeyword: '悉尼海港大桥步行', gmap: 'Sydney+Harbour+Bridge+pedestrian+walkway' },
+      { name: 'Spice Alley 亚洲美食巷', lat: -33.8840, lng: 151.1965, type: 'food', time: '18:30', desc: '性价比超高的亚洲美食巷', budget: '人均15-25 AUD',
+        detail: '🚆 交通：Milsons Point/Wynyard → Central\n• 火车T1线到Central站（约10分钟）\n• 从Central步行10分钟到Spice Alley（在Chippendale区）\n• 或轻轨L2到「UTS」站\n\n🍜 各种亚洲菜：泰国/马来/日式/越南\n户外灯笼氛围很好，随便吃\n\n🚆 回程：Central → T4 → Bondi Junction（15分钟）',
+        xhsKeyword: '悉尼Spice Alley', gmap: 'Spice+Alley+Chippendale+Sydney' }
+    ]
+  },
+
+  // ═══════════════ D7: Gerringong+Kiama 反向火车一日游 ═══════════════
+  {
+    id: 7, label: 'D7', date: '5月29日 周四', title: 'Gerringong+Kiama 反向海岸火车 🚆', color: '#34c759',
+    locations: [
+      { name: 'Bondi Junction站 出发', lat: -33.8917, lng: 151.2474, type: 'transport', time: '07:15', desc: '早起坐火车直奔Gerringong（反向避人流）',
+        detail: '🚆 反向走攻略（小红书推荐！）：\n先坐到更远的Gerringong → 早上包场海滩\n再回Kiama → 下午旅行团已散\n\n第一段：Bondi Junction → Central Station\n• T4线，约15分钟\n• 刷Opal卡进站\n\n第二段：Central Station → Gerringong\n• NSW TrainLink 南海岸线（South Coast Line）\n• 约2小时40分钟直达！无需换乘\n• 🪟 建议坐左侧靠窗（面朝海）\n• 票价约$13-19/人（Opal卡刷卡）\n\n💡 推荐班次：Central 7:38 出发，约10:15到Gerringong\n🌊 沿途经过Royal National Park+Sea Cliff Bridge，风景绝美\n📱 查时刻表：transportnsw.info/trip',
+        gmap: 'Bondi+Junction+Station' },
+      { name: 'Gerringong Station 到达', lat: -34.7450, lng: 150.8310, type: 'transport', time: '10:15', desc: '抵达Gerringong！比Kiama更安静的海边小镇',
+        detail: '出站步行10分钟到海边\n早上到这里几乎没有游客！\n大部分人都先去了Kiama',
+        gmap: 'Gerringong+Station+NSW' },
+      { name: 'Werri Beach', lat: -34.7530, lng: 150.8380, type: 'spot', time: '10:30', desc: '绝美冲浪海滩，早上几乎包场！',
+        detail: '🚶 从Gerringong站步行约15分钟\n\n🏖️ 反向优势：上午这里几乎只有本地冲浪者\n绵长沙滩+背后绿色山丘，拍照超出片\n可以在沙滩上走走发呆\n海水很清但5月有点冷，看看就好\n\n⏱ 停留约40分钟',
+        xhsKeyword: 'Gerringong Werri Beach', gmap: 'Werri+Beach+Gerringong' },
+      { name: 'Gerringong 悬崖步道', lat: -34.7480, lng: 150.8350, type: 'spot', time: '11:15', desc: '沿海悬崖步道，俯瞰南太平洋，无人打扰',
+        detail: '🚶 从Werri Beach北端开始\nGerringong to Kiama Coastal Walk的一段\n走20-30分钟\n悬崖上看海+绿地非常治愈\n\n📸 拍照绝佳：悬崖边+大海+绿草地',
+        gmap: 'Gerringong+coastal+walk' },
+      { name: 'Gerringong镇上brunch', lat: -34.7440, lng: 150.8290, type: 'food', time: '11:45', desc: '小镇咖啡馆吃个早午餐', budget: '人均20-30 AUD',
+        detail: '🚶 步行回到镇中心Fern St\n\n推荐：\n• Blue Willow Cafe — 本地人气咖啡馆\n• The Hill Bar & Kitchen — 看海露台\n\n点杯flat white + 松饼/eggs benedict\n享受小镇慢节奏',
+        xhsKeyword: 'Gerringong咖啡馆', gmap: 'Blue+Willow+Cafe+Gerringong' },
+      { name: 'Gerringong → Kiama 火车', lat: -34.7450, lng: 150.8310, type: 'transport', time: '12:30', desc: '火车1站回Kiama（约10分钟）',
+        detail: '🚆 Gerringong Station → Kiama Station\n• 南海岸线往北1站\n• 约10分钟\n• 刷Opal卡\n• 班次约每小时1班，看好时刻表\n\n💡 反向优势：下午到Kiama，旅行团已走！',
+        gmap: 'Kiama+Station+NSW' },
+      { name: 'Kiama Blowhole 喷水洞', lat: -34.6720, lng: 150.8590, type: 'spot', time: '13:00', desc: '下午人少！澳洲最大喷水洞尽情拍照',
+        detail: '🚶 交通：Kiama火车站步行10分钟\n\n🎯 反向优势：下午1点旅行团都已返程\n观景台不用抢位，拍照从容\n\n世界最大海蚀喷洞之一\n海浪大时水柱可达数米高\n旁边有灯塔和观景台\n⚠️ 站远点，会被喷到水\n📸 等浪打来瞬间抓拍\n\n停留约30分钟',
+        xhsKeyword: 'Kiama喷水洞', gmap: 'Kiama+Blowhole' },
+      { name: 'Kiama Harbour 港口+黑沙滩', lat: -34.6735, lng: 150.8570, type: 'spot', time: '13:40', desc: '小港口+火山岩黑沙滩，很有南海岸风情',
+        detail: '🚶 从Blowhole步行5分钟\n\n安静的渔港，看看渔船和海鸥\nBlack Beach是特别的黑色火山岩沙滩\n适合拍照10-15分钟',
+        gmap: 'Kiama+Harbour' },
+      { name: 'Little Blowhole 小喷洞', lat: -34.6780, lng: 150.8560, type: 'spot', time: '14:00', desc: '比大喷洞人更少，喷发频率反而更高',
+        detail: '🚶 从港口步行约10分钟\n\n虽然小但喷发更频繁\n周围悬崖步道风景好\n游客极少，适合安静欣赏',
+        gmap: 'Little+Blowhole+Kiama' },
+      { name: 'The Hungry Monkey 下午茶', lat: -34.6700, lng: 150.8530, type: 'food', time: '14:30', desc: 'Kiama人气咖啡馆，喝杯咖啡歇脚', budget: '人均10-20 AUD',
+        detail: '🚶 步行回到镇中心Manning St\n\n当地最受欢迎的cafe\n推荐：flat white + 蛋糕\n坐室外位晒太阳\n为回程做准备',
+        xhsKeyword: 'Kiama咖啡馆', gmap: 'The+Hungry+Monkey+Kiama' },
+      { name: 'Kiama站 返程', lat: -34.6710, lng: 150.8540, type: 'transport', time: '15:15', desc: '从Kiama坐火车返回悉尼（约2h15min）',
+        detail: '🚆 返程（比从Gerringong回快10分钟！）：\nKiama → Central Station（约2小时15分）\nCentral → Bondi Junction T4线（约15分钟）\n\n💡 推荐班次：约15:15有一班\n📱 用transportnsw.info查实时班次\n\n🪟 回程坐右侧靠窗看海景\n约17:45回到Bondi Junction\n\n🎫 全天火车费用：Opal每日封顶$17.8！\n（周四不是周日，无$3.2封顶）',
+        gmap: 'Kiama+Station' },
+      { name: 'Bondi Junction 晚餐', lat: -33.8917, lng: 151.2474, type: 'food', time: '18:00', desc: '酒店附近随便吃，今天走了不少路', budget: '人均20-30 AUD',
+        detail: '🚶 Bondi Junction站出来就是Westfield商场\n商场内有很多餐厅选择\n推荐：\n• Guzman y Gomez（墨西哥卷）\n• Thai Rock（泰国菜）\n• Din Tai Fung 鼎泰丰（如果想念中餐）\n• 或Uber Eats回酒店躺平',
+        gmap: 'Westfield+Bondi+Junction+food+court' }
+    ]
+  },
+
+  // ═══════════════ D8: 邦迪海岸线 + 悉尼塔 ═══════════════
+  {
+    id: 8, label: 'D8', date: '5月30日 周五', title: '邦迪海岸线+市区 🏖️', color: '#ff2d55',
+    locations: [
+      { name: 'Bondi Beach 邦迪海滩', lat: -33.8915, lng: 151.2767, type: 'spot', time: '08:00', desc: '世界著名冲浪海滩，清晨最美',
+        detail: '🚌 交通：酒店 → Bondi Beach\n• 巴士380/381：Bondi Junction站外坐，约10分钟到达\n• Opal卡刷卡上车\n• 在「Campbell Parade」站下车\n\n清晨人少光线好，冲浪者已经在浪里了\n推荐在海滩南端Icebergs Pool旁拍照',
+        xhsKeyword: '悉尼邦迪海滩', gmap: 'Bondi+Beach+Sydney' },
+      { name: 'Bills Bondi 早餐', lat: -33.8890, lng: 151.2740, type: 'food', time: '09:00', desc: '澳洲国民brunch品牌，ricotta松饼超出名', budget: '人均25-35 AUD',
+        detail: '🚶 交通：从海滩步行5分钟到Hall Street\n\n招牌必点：\n• Ricotta hotcakes 松饼\n• Scrambled eggs 嫩滑炒蛋\n• Sweetcorn fritters 玉米煎饼\n\n工作日不太排队',
+        xhsKeyword: '悉尼Bills早餐', gmap: 'Bills+Bondi+Beach+Sydney' },
+      { name: 'Bondi to Coogee Coastal Walk', lat: -33.8980, lng: 151.2750, type: 'spot', time: '10:00', desc: '全长6km沿海步道，悉尼最美步行路线！',
+        detail: '🚶 从Bondi Beach南端出发\n\n路线：Bondi → Tamarama → Bronte → Clovelly → Coogee\n全程约2小时慢走\n沿途无数拍照点\n台阶较多但年轻人无压力\n\n📸 最佳拍照点：\n• Bondi南端回望（经典角度）\n• Tamarama Bay\n• Bronte Beach 的岩石泳池\n• Clovelly Bay 清澈海水',
+        xhsKeyword: '悉尼Bondi to Coogee步道', gmap: 'Bondi+to+Coogee+Coastal+Walk' },
+      { name: 'Coogee Beach', lat: -33.9200, lng: 151.2574, type: 'spot', time: '12:00', desc: '步道终点，比Bondi更安静的家庭海滩',
+        gmap: 'Coogee+Beach+Sydney' },
+      { name: 'Coogee Pavilion 午餐', lat: -33.9205, lng: 151.2565, type: 'food', time: '12:15', desc: '海边大型餐厅/酒吧，屋顶露台看海', budget: '人均25-40 AUD',
+        detail: '🚶 从Coogee Beach步行2分钟\n\n三层楼建筑，每层氛围不同\n推荐顶层露台+pizza/burger\n周五有DJ比较热闹',
+        xhsKeyword: '悉尼Coogee Pavilion', gmap: 'Coogee+Pavilion+Sydney' },
+      { name: 'Sydney Tower Eye 悉尼塔', lat: -33.8705, lng: 151.2089, type: 'spot', time: '14:30', desc: '360度俯瞰悉尼全景',
+        budget: '约30 AUD/人',
+        detail: '🚌🚆 交通：Coogee → Sydney Tower\n• 巴士370：Coogee Beach → Town Hall/QVB站（约30分钟）\n• 或巴士372/373到Central再转\n• 悉尼塔入口在Westfield Sydney商场4楼（Pitt St Mall）\n\n开放至21:00\n5月日落约17:10，推荐下午去等日落！\n能看到整个悉尼港、歌剧院、海港大桥',
+        reserve: 'https://www.sydneytowereye.com.au/', xhsKeyword: '悉尼塔观景', gmap: 'Sydney+Tower+Eye' },
+      { name: "Mrs Macquarie's Chair", lat: -33.8604, lng: 151.2226, type: 'spot', time: '16:00', desc: '歌剧院+海港大桥同框经典机位',
+        detail: '🚶🚆 交通：Sydney Tower → Mrs Macquarie\'s Chair\n• 步行穿过Domain公园约20分钟\n• 或从Martin Place站步行15分钟\n\n经典悉尼明信片角度\n日落前光线照在歌剧院上超美\n\n🚆 回程：步行到Martin Place站 → T4线 → Bondi Junction（12分钟）',
+        xhsKeyword: '悉尼麦考利夫人座椅拍照', gmap: "Mrs+Macquarie's+Chair+Sydney" },
+      { name: 'Bondi Junction 晚餐', lat: -33.8917, lng: 151.2474, type: 'food', time: '18:00', desc: '回酒店附近吃最后的悉尼晚餐', budget: '人均25-40 AUD',
+        detail: '🚆 Martin Place → T4 → Bondi Junction（12分钟）\n\n推荐：\n• Ippudo 一风堂拉面（Westfield内）\n• Chaco Bar 日式烧鸟\n• 或去Bondi Beach附近的Icebergs Dining（需预约，人均50-80）',
+        xhsKeyword: '悉尼Bondi Junction餐厅', gmap: 'Bondi+Junction+restaurants' },
+      { name: 'Icebergs Dining Room', lat: -33.8940, lng: 151.2740, type: 'food', time: '—', desc: '备选：邦迪最高端海景餐厅', budget: '人均50-80 AUD',
+        detail: '需提前预约\n俯瞰Icebergs泳池和邦迪海滩\n意大利fine dining\n建议日落时段（但要提前几天订位）\n\n🚌 巴士380从Bondi Junction到Bondi Beach（10分钟）',
+        reserve: 'https://ifrgroup.com.au/icebergs-dining/', xhsKeyword: '悉尼Icebergs餐厅', gmap: 'Icebergs+Dining+Room+Bondi+Beach' }
+    ]
+  },
+
+  // ═══════════════ D9: 悉尼→回程 ═══════════════
+  {
+    id: 9, label: 'D9', date: '5月31日 周六', title: '悉尼→回程 ✈️', color: '#86868b',
+    locations: [
+      { name: 'Porch and Parlour 早餐', lat: -33.8870, lng: 151.2820, type: 'food', time: '09:00', desc: '北邦迪超人气brunch，最后享受海边阳光', budget: '人均20-30 AUD',
+        detail: '🚌 交通：Bondi Junction → North Bondi\n• 巴士380到Campbell Parade再步行\n• 或直接打车5分钟\n\n最后一顿澳洲brunch！\n推荐：绿豆煎饼、果昔碗\n走路就能看到海',
+        xhsKeyword: 'Bondi Porch and Parlour', gmap: 'Porch+and+Parlour+North+Bondi' },
+      { name: 'Bondi Beach 最后看一眼', lat: -33.8915, lng: 151.2767, type: 'spot', time: '10:00', desc: '海边散步、拍照、告别邦迪',
+        detail: '🚶 从Porch and Parlour步行5分钟\n最后在海边坐一会\n\n如果要买伴手礼：\n• Westfield Bondi Junction有Haigh\'s巧克力\n• 超市买Tim Tam、蜂蜜\n• 免税店机场再买也行',
+        gmap: 'Bondi+Beach+Sydney' },
+      { name: '回酒店收拾行李', lat: -33.8917, lng: 151.2474, type: 'hotel', time: '11:00', desc: '退房收拾',
+        detail: '🚌 从Bondi Beach坐380/381回Bondi Junction（10分钟）\n退房、存行李或直接拿着走' },
+      { name: '出发前往机场', lat: -33.8917, lng: 151.2474, type: 'transport', time: '16:30', desc: '提前约4小时出发，国际航班需余量',
+        detail: '🚆 交通：Bondi Junction → Sydney Airport\n• T4火车：Bondi Junction → Central（15分钟）\n• Central换乘Airport Link → International Terminal T1（约13分钟）\n• 全程约30-35分钟\n• ⚠️ Airport Link有额外附加费$15.4/人\n\n• 或4人打车：约$40-50总价到机场（推荐✅ 和火车差不多价）\n\n20:35起飞，建议18:00前到T1\n\n🛒 退税提醒：\n• 单店消费满$300可退10% GST\n• 先去ABF/TRS柜台验货（在check-in前！）\n• 过安检后也有退税柜台',
+        gmap: 'Sydney+Airport+International+Terminal+1' },
+      { name: '悉尼机场 T1', lat: -33.9461, lng: 151.1772, type: 'transport', time: '17:30', desc: '办理登机+退税+免税店',
+        detail: '国际航站楼T1\n流程：退税验货 → 办理登机 → 过安检 → 免税店 → 登机\n\n免税店推荐：\n• 澳洲红酒\n• Aesop/Jurlique护肤品\n• Tim Tam巧克力',
+        gmap: 'Sydney+Airport+International+Terminal+1' }
+    ]
+  }
+];
+
+function overviewContent() {
+  return `
+<div class="hero"><h1>🇦🇺 澳洲自然之旅</h1><p class="subtitle">墨尔本 + 悉尼 · 4人同行 · 2025.5.23-31</p></div>
+<div class="info-grid">
+  <div class="info-card"><div class="label">酒店</div><div class="value">🏨 墨尔本 盛橡套房<br>🏨 悉尼 lyf邦迪</div></div>
+  <div class="info-card"><div class="label">航班</div><div class="value">5/23 SIN→MEL 20:20到<br>5/27 MEL→SYD 14:25<br>5/31 SYD→SIN 20:35</div></div>
+  <div class="info-card"><div class="label">交通卡</div><div class="value">🚃 墨尔本Myki卡<br>🚆 悉尼Opal卡/刷Visa</div></div>
+  <div class="info-card"><div class="label">预估费用</div><div class="value">人均约2500-3200 AUD<br>(含机票酒店)</div></div>
+</div>
+<div class="section-head">行程概览</div>
+<div class="day-list">${DAYS.slice(1).map(d=>`<div class="card" onclick="go(${d.id})"><div class="name"><span class="dot" style="background:${d.color}"></span>${d.label} · ${d.title}</div><div class="desc">${d.date}</div></div>`).join('')}</div>
+<div class="section-head">🚗 包车/团 安排</div>
+<div class="pay-summary">
+  <h4>D3 大洋路 — 包车反线</h4>
+  <p>✅ 先走内陆高速直奔十二门徒（人少！），再沿海岸线回墨尔本</p>
+  <p>人均125-210 AUD · 平台：Klook / DingTaxi / 飞猪</p>
+</div>
+<div class="pay-summary">
+  <h4>D4 蒸汽火车+企鹅 — 已报小团</h4>
+  <p>✅ 含酒店接送+Puffing Billy+企鹅归巢+中文导游</p>
+  <p class="warn">🧥 企鹅归巢超冷！带厚外套+围巾+暖宝宝</p>
+</div>
+<div class="section-head">🚆 公共交通速查</div>
+<div class="pay-summary">
+  <h4>墨尔本</h4>
+  <p>🚃 <strong>Free Tram Zone</strong>：CBD范围内坐电车免费！不用刷卡</p>
+  <p>🎫 出免费区需要<strong>Myki卡</strong>（7-11/车站买，充$10-20够用）</p>
+  <p>单程约$5 AUD | 日封顶$10.6</p>
+</div>
+<div class="pay-summary">
+  <h4>悉尼</h4>
+  <p>🚆 <strong>Opal卡</strong>或直接<strong>Visa/Apple Pay</strong>刷卡进站</p>
+  <p>⛴️ 渡轮也刷Opal，和公交一样方便</p>
+  <p>日封顶$17.8 | <span class="ok-text">周日全天封顶$3.2！</span></p>
+  <p class="warn">⚠️ Airport Link有额外附加费$15.4/人</p>
+</div>
+<div class="section-head">⚠️ 需提前预约</div>
+<div class="pay-summary">
+  <p>🐧 企鹅归巢门票 — 已含在小团</p>
+  <p>🚂 Puffing Billy火车票 — 已含在小团</p>
+  <p>🐨 Taronga Zoo门票+考拉合影 — taronga.org.au</p>
+  <p>🗼 Sydney Tower Eye — sydneytowereye.com.au</p>
+</div>
+<div class="section-head">💡 实用Tips</div>
+<div class="pay-summary">
+  <p>🧥 5月是澳洲秋末，早晚10-15°C，带厚外套</p>
+  <p>💳 几乎全面刷卡（Visa/Mastercard），很少需现金</p>
+  <p>📱 买澳洲eSIM（Optus/Telstra），机场/便利店有售</p>
+  <p>🛒 退税：单店消费满$300可退10% GST（机场ABF柜台）</p>
+</div>
+<div class="section-head">图例</div>
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-red)"></div>餐厅</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-blue)"></div>景点</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-purple)"></div>酒吧</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--tint-orange)"></div>酒店</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--text-tertiary)"></div>交通</div>
+</div>`;
+}
+
+// ══════════ ENGINE ══════════
+const map = L.map('map', { center: [-35.5, 148.0], zoom: 5, zoomControl: false, attributionControl: true });
+L.control.zoom({ position: 'topright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(map);
+
+const LocateControl = L.Control.extend({
+  options: { position: 'bottomright' },
+  onAdd() {
+    const btn = L.DomUtil.create('button', 'locate-btn');
+    btn.innerHTML = '📍';
+    btn.title = '我的位置';
+    L.DomEvent.disableClickPropagation(btn);
+    btn.addEventListener('click', () => {
+      btn.classList.add('active');
+      map.locate({ setView: true, maxZoom: 15 });
+    });
+    this._btn = btn;
+    return btn;
+  }
+});
+new LocateControl().addTo(map);
+let locMarker, locCircle;
+map.on('locationfound', e => {
+  const r = e.accuracy / 2;
+  if (locMarker) { locMarker.setLatLng(e.latlng); locCircle.setLatLng(e.latlng).setRadius(r); }
+  else {
+    locMarker = L.marker(e.latlng, {
+      icon: L.divIcon({ className:'', html:'<div style="width:14px;height:14px;border-radius:50%;background:#007aff;border:2.5px solid #fff;box-shadow:0 0 6px rgba(0,122,255,.5)"></div><div class="loc-pulse" style="position:absolute;top:0;left:0"></div>', iconSize:[14,14], iconAnchor:[7,7] }),
+      zIndexOffset: 2000
+    }).addTo(map);
+    locCircle = L.circle(e.latlng, { radius: r, color: '#007aff', fillColor: '#007aff', fillOpacity: .08, weight: 1 }).addTo(map);
+  }
+});
+map.on('locationerror', () => {});
+
+function icon(color, emoji) {
+  return L.divIcon({ className: '', html: `<div style="width:28px;height:28px;border-radius:50%;background:${color};border:2.5px solid #fff;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,.18)">${emoji||''}</div>`, iconSize: [28,28], iconAnchor: [14,14], popupAnchor: [0,-16] });
+}
+
+L.marker([HOTEL.lat, HOTEL.lng], { icon: icon('#ff9500','🏨'), zIndexOffset: 1000 }).addTo(map).bindPopup(`<b>${HOTEL.name}</b>`);
+L.marker([HOTEL2.lat, HOTEL2.lng], { icon: icon('#ff9500','🏨'), zIndexOffset: 1000 }).addTo(map).bindPopup(`<b>${HOTEL2.name}</b>`);
+
+let markers = [], polylines = [];
+const emojis = { food:'🍽️', spot:'📍', hotel:'🏨', transport:'🚃', drink:'🍺' };
+
+function clearMap() { markers.forEach(m=>map.removeLayer(m)); polylines.forEach(p=>map.removeLayer(p)); markers=[]; polylines=[]; }
+
+function showDay(idx) {
+  clearMap();
+  if (idx === 0) {
+    const pts = [];
+    DAYS.forEach(d => d.locations.forEach(l => { if(l.lat) pts.push([l.lat,l.lng]); }));
+    if(pts.length) map.fitBounds(pts, {padding:[30,30]});
+    DAYS.slice(1).forEach(d => {
+      d.locations.filter(l=>l.time!=='—').forEach(l => {
+        const m = L.circleMarker([l.lat,l.lng], { radius:4, fillColor:d.color, color:'#fff', weight:1.5, fillOpacity:.9 }).addTo(map).bindPopup(`<b>${l.name}</b><br><span style="color:#86868b">${d.label}</span>`);
+        markers.push(m);
+      });
+    });
+    return;
+  }
+  const day = DAYS.find(d=>d.id===idx);
+  if(!day) return;
+  const coords = [];
+  day.locations.forEach(l => {
+    if(!l.lat) return;
+    const m = L.marker([l.lat,l.lng], { icon: icon(day.color, emojis[l.type]||'📌') }).addTo(map);
+    const gmapQ = l.gmap||encodeURIComponent(l.name);
+    m.bindPopup(`<b>${l.name}</b>${l.time!=='—'?'<br><span style="color:#86868b">'+l.time+'</span>':''}<br>${l.desc}${l.budget?'<br><span style="color:#ff9500">'+l.budget+'</span>':''}<br><a href="#" onclick="event.preventDefault();openAS('${l.name.replace(/'/g,"\\'")}',${l.lat},${l.lng},'${gmapQ}')">📍 导航</a>`);
+    markers.push(m);
+    if(l.time!=='—') coords.push([l.lat,l.lng]);
+  });
+  if(coords.length>1) { const pl = L.polyline(coords, { color:day.color, weight:2.5, opacity:.5, dashArray:'6,5' }).addTo(map); polylines.push(pl); }
+  if(coords.length) map.fitBounds(coords, { padding:[40,40], maxZoom:14 });
+}
+
+// ══════════ RENDER ══════════
+function payChips(pay) {
+  if(!pay) return '';
+  let h = '<div class="pays">';
+  const m = { cash:'💴现金', card:'💳刷卡', opal:'Opal', myki:'Myki' };
+  for(const [k,label] of Object.entries(m)) {
+    if(pay[k]!==undefined) { const c = pay[k]===1?'ok':pay[k]===0.5?'idk':'no'; h += `<span class="pay ${c}">${label}</span>`; }
+  }
+  return h+'</div>';
+}
+
+const IN_APP_WEBVIEW = (() => {
+  const ua = (navigator.userAgent || '').toLowerCase();
+  return /micromessenger|xhs|xhsdiscover|discover\/|tiktok|aweme|weibo|qq\/|qqbrowser|alipayclient|dingtalk|lark|feishu|ucbrowser|baiduboxapp|toutiao|newsarticle/.test(ua);
+})();
+
+function xhsKeyword(loc) {
+  if(loc.xhsKeyword) return loc.xhsKeyword.trim();
+  return (loc.name||'').replace(/⭐.*$/g,'').replace(/（.*?）/g,'').replace(/\(.*?\)/g,'').replace(/\s+/g,' ').trim();
+}
+function xhsAppUrl(loc) { return `xhsdiscover://search/result?keyword=${encodeURIComponent(xhsKeyword(loc))}&target_search=notes&source=deeplink`; }
+function xhsWebUrl(loc) { return `https://www.xiaohongshu.com/search_result?keyword=${encodeURIComponent(xhsKeyword(loc))}&source=web_explore_feed`; }
+
+window._extLocs = {};
+DAYS.forEach(d => d.locations.forEach(l => { window._extLocs[`${d.id}::${l.name}`] = l; }));
+
+function openExt(key) {
+  const loc = window._extLocs[key]; if(!loc) return false;
+  if (IN_APP_WEBVIEW) { window.location.href = xhsWebUrl(loc); }
+  else { window.location.href = xhsAppUrl(loc); }
+  return false;
+}
+function openXhs(key) { return openExt(key); }
+
+function locCard(loc, dayIdx) {
+  const dot = loc.type==='food'?'food':loc.type==='spot'?'spot':loc.type==='drink'?'drink':loc.type==='hotel'?'hotel':'transport';
+  const bdg = loc.type==='food'?'<span class="badge food">餐</span>':loc.type==='spot'?'<span class="badge spot">景</span>':loc.type==='drink'?'<span class="badge drink">饮</span>':'';
+  const uid = `d${dayIdx}-${loc.name.replace(/\W/g,'')}`;
+  const locKey = `${dayIdx}::${loc.name}`;
+  const gmapQ = loc.gmap||encodeURIComponent(loc.name);
+  let lnk = `<button class="btn nav" onclick="openAS('${loc.name.replace(/'/g,"\\'")}',${loc.lat},${loc.lng},'${gmapQ}')">📍 导航</button>`;
+  if(loc.xhsKeyword) {
+    const xhsHref = IN_APP_WEBVIEW ? xhsWebUrl(loc) : xhsAppUrl(loc);
+    lnk += `<a href="${xhsHref}" onclick="return openXhs('${locKey.replace(/'/g,"\\'")}')" class="btn xhs">📕 小红书</a>`;
+  }
+  if(loc.reserve) lnk += `<a href="${loc.reserve}" target="_blank" class="btn rsv">📅 预约</a>`;
+  return `<div class="tl-item"><div class="tl-dot ${dot}"></div><div class="card" onclick="if(!event.target.closest('.btn,.links'))toggle('${uid}')"><div class="time">${loc.time!=='—'?loc.time:'备选'}</div><div class="name">${bdg} ${loc.name}</div><div class="desc">${loc.desc}</div>${loc.budget?'<div class="budget">'+loc.budget+'</div>':''}${payChips(loc.pay)}<div class="links">${lnk}</div>${loc.detail?'<div class="details" id="'+uid+'">'+loc.detail.replace(/\n/g,'<br>')+'</div>':''}</div></div>`;
+}
+
+function renderDay(idx) {
+  const d = DAYS.find(x=>x.id===idx); if(!d) return '';
+  const main = d.locations.filter(l=>l.time!=='—');
+  const alt = d.locations.filter(l=>l.time==='—');
+  let h = `<div class="day-head"><h2>${d.title}</h2><p>${d.date}</p></div>`;
+  if(main.length) { h += '<div class="section-head">行程</div><div class="timeline">'; main.forEach(l => h += locCard(l, idx)); h += '</div>'; }
+  if(alt.length) { h += '<div class="section-head">备选</div><div class="timeline">'; alt.forEach(l => h += locCard(l, idx)); h += '</div>'; }
+  return h;
+}
+
+// ══════════ NAV ══════════
+let cur = 0;
+const tabsEl = document.getElementById('tabs');
+const contentEl = document.getElementById('content');
+
+DAYS.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'tab' + (d.id===0?' active':'');
+  btn.dataset.day = d.id;
+  btn.textContent = d.label;
+  tabsEl.appendChild(btn);
+});
+
+function go(idx) {
+  cur = idx;
+  tabsEl.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', +t.dataset.day===idx));
+  contentEl.innerHTML = idx===0 ? overviewContent() : renderDay(idx);
+  showDay(idx);
+  contentEl.scrollTo({top:0});
+  const tab = tabsEl.querySelector(`[data-day="${idx}"]`);
+  if(tab) tab.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+}
+
+function toggle(id) { const el=document.getElementById(id); if(el) el.classList.toggle('closed'); }
+
+tabsEl.addEventListener('click', e => { const t=e.target.closest('.tab'); if(t) go(+t.dataset.day); });
+
+go(0);
+
+/* ── Action Sheet for Navigation ── */
+const asOverlay = document.createElement('div');
+asOverlay.className = 'as-overlay';
+asOverlay.innerHTML = `<div class="as-sheet">
+  <div class="as-group" id="as-opts"></div>
+  <div class="as-group"><button class="as-item as-cancel" onclick="closeAS()">取消</button></div>
+</div>`;
+document.body.appendChild(asOverlay);
+asOverlay.addEventListener('click', e => { if (e.target === asOverlay) closeAS(); });
+
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+function openAS(name, lat, lng, gmap) {
+  const q = gmap || encodeURIComponent(name);
+  const encName = encodeURIComponent(name);
+  const appleUrl = IN_APP_WEBVIEW
+    ? `https://maps.apple.com/?q=${lat},${lng}&ll=${lat},${lng}&name=${encName}`
+    : `maps://maps.apple.com/?q=${lat},${lng}&name=${encName}`;
+  const googleUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
+  document.getElementById('as-opts').innerHTML =
+    `<button class="as-item" onclick="window.open('${appleUrl}');closeAS()">🍎 Apple Maps</button>` +
+    `<button class="as-item" onclick="window.open('${googleUrl}');closeAS()">🗺️ Google Maps</button>`;
+  asOverlay.classList.add('show');
+}
+function closeAS() { asOverlay.classList.remove('show'); }
+</script>
+</body>
+</html>
